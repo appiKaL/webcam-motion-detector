@@ -17,23 +17,16 @@ from email import encoders
 os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 # Paths to Haar Cascade files and sound
-frontal_face_cascade_path = "/path/to/haarcascade_frontalface_default.xml"
-profile_face_cascade_path = "/path/to/haarcascade_profileface.xml"
-sound_file = "/path/to/soundfile.mp3"
-
-# Email configuration
-SMTP_SERVER = 'smtp.example.com'  # Replace with your SMTP server
-SMTP_PORT = 587  # Replace with your SMTP port
-SENDER_EMAIL = 'your_email@example.com'
-SENDER_PASSWORD = 'your_password'
-RECEIVER_EMAIL = 'receiver@example.com'
+frontal_face_cascade_path = "/home/appikal/webcam-motion-detector/facereco/haarcascade_frontalface_default.xml"
+profile_face_cascade_path = "/home/appikal/webcam-motion-detector/facereco/haarcascade_profileface.xml"
+sound_file = "/home/appikal/webcam-motion-detector/soundfiles/anime-wow-sound-effect.mp3"
 
 # Load Haar Cascades
 frontal_face_cascade = cv2.CascadeClassifier(frontal_face_cascade_path)
 profile_face_cascade = cv2.CascadeClassifier(profile_face_cascade_path)
 
 # Load the trained model
-model = tf.keras.models.load_model("/path/to/face_recognition_model.h5")
+model = tf.keras.models.load_model("/home/appikal/webcam-motion-detector/face_recognition_model.h5")
 
 # Class names corresponding to your classmates
 class_names = ["Adrien", "Aliser", "Alper", "AntoineNotCoach", "AntoineNotNotCoach", "Ben", "Christian", "Colin", 
@@ -57,36 +50,6 @@ cursor.execute('''
     )
 ''')
 conn.commit()
-
-# Email function
-def send_email_with_attachment(filename, recipient_email):
-    subject = "Late Arrival Notification"
-    body = f"{os.path.basename(filename)} was detected as arriving late."
-
-    # Set up MIME message
-    msg = MIMEMultipart()
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = recipient_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
-
-    # Attach image
-    attachment = MIMEBase('application', 'octet-stream')
-    with open(filename, 'rb') as file:
-        attachment.set_payload(file.read())
-    encoders.encode_base64(attachment)
-    attachment.add_header('Content-Disposition', f'attachment; filename={os.path.basename(filename)}')
-    msg.attach(attachment)
-
-    # Send email
-    try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.sendmail(SENDER_EMAIL, recipient_email, msg.as_string())
-        print(f"Email sent to {recipient_email} with attachment {filename}")
-    except Exception as e:
-        print(f"Error sending email: {e}")
 
 # Function to save the detection to the database
 def log_late_arrival(filename, classmate_name):
@@ -179,8 +142,6 @@ while True:
                     filename = os.path.join(save_folder, f"{name}_Late_Arrival_Face_{current_time.strftime('%Y-%m-%d_%H-%M-%S')}.jpg")
                     cv2.imwrite(filename, frame)
                     log_late_arrival(filename, name)  # Log to database with classmate's name
-                    send_email_with_attachment(filename, RECEIVER_EMAIL)  # Send email
-
         else:
             sound_played = False
 
